@@ -12,6 +12,8 @@
 //#include <SoftwareSerial.h>
 //HardwareSerial SerialGPS(2);
 //define the pins used by the transceiver module
+#define myID 1
+
 #define ss 18//5
 #define rst 14
 #define dio0 2
@@ -69,7 +71,9 @@ void loop() {
   LoRa.beginPacket();
   LoRa.print("Message Nr: ");
   LoRa.print(counter);
-  LoRa.print("  -   Sensor:");
+  LoRa.print(" send from Sender ");
+  LoRa.print(myID);
+  LoRa.print("| Payload: Sensor:");
   LoRa.print(sensIN);
   Serial.println(LoRa.endPacket());
   counter++;
