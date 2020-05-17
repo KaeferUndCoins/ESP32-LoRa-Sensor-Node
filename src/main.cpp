@@ -7,7 +7,7 @@
 
 #include <SPI.h>
 #include <LoRa.h>
-//#include <SoftwareSerial.h>
+
 //#include <HardwareSerial.h> // sollte bereits mit Arduino IDE installiert sein
 //#include <SoftwareSerial.h>
 //HardwareSerial SerialGPS(2);
@@ -26,7 +26,6 @@ int test=0;
 void setup() {
   //initialize Serial Monitor  g
   Serial.begin(9600);  
-  //SerialGPS.begin(9600, SERIAL_8N1, 16, 17);
   while (!Serial);
   Serial.println("LoRa Sender");
   //setup LoRa transceiver module
@@ -54,6 +53,8 @@ void setup() {
 
 int incomingByte = 0; // for incoming serial data
 int sensIN;
+int lastMsg;
+int interval=1000;
 void loop() {
   
   if (Serial.available() > 0) {
@@ -64,6 +65,9 @@ void loop() {
      Serial.println(" on Serial 0");
   }
   sensIN=analogRead(ADC_1);
+
+  if (millis()-lastMsg>=interval){
+    lastMsg=millis();
   Serial.print("Sending packet: ");
   Serial.println(counter);
   
@@ -75,10 +79,29 @@ void loop() {
   LoRa.print(myID);
   LoRa.print("| Payload: Sensor:");
   LoRa.print(sensIN);
-  Serial.println(LoRa.endPacket());
+  LoRa.endPacket();
   counter++;
   if(counter>=10000){
     counter=0;
   }
-  delay(1000);
-}
+  }
+   int packetSize = LoRa.parsePacket();
+  if (packetSize)
+  {
+    String LoRaData = "";
+    // received a packet
+    Serial.print("Received packet '");
+    // read packet
+    while (LoRa.available())
+    {
+      LoRaData = LoRa.readString();
+      Serial.print(LoRaData);
+    }
+    // print RSSI of packet
+    Serial.print("' recieved from id: ");
+    Serial.print(myID);
+    Serial.print(" with RSSI ");
+    int rssi_rx = LoRa.packetRssi();
+    Serial.println(rssi_rx);
+
+}}
