@@ -24,7 +24,8 @@ void setup()
   //initialize Serial Monitor
   Serial.begin(9600);
   Serial2.begin(9600);
-  while (!Serial);
+  while (!Serial)
+    ;
   Serial.println("LoRa Sender");
   //setup LoRa transceiver module
   LoRa.setPins(ss, rst, dio0);
@@ -87,15 +88,14 @@ void loop()
     Serial.println(counter);
     //Send LoRa packet to receiver
     LoRa.beginPacket();
-    LoRa.print("MsgNr:");
+    LoRa.print("{");
+    LoRa.print("\"MsgNr\":");
     LoRa.print(counter);
-    LoRa.print(" SenderID:");
+    LoRa.print(", \"TxID\":");
     LoRa.print(myID);
-    LoRa.print("|Payload: ");
-    LoRa.print(sensIN);
     if (gps.date.isValid())
     {
-      LoRa.print("|Date:");
+      LoRa.print(", \"Date\":\"");
       if (gps.date.day() < 10)
         LoRa.print("0");
       LoRa.print(gps.date.day());
@@ -105,10 +105,11 @@ void loop()
       LoRa.print(gps.date.month());
       LoRa.print(".");
       LoRa.print(gps.date.year());
+      LoRa.print("\"");
     }
     if (gps.time.isValid())
     {
-      LoRa.print("|Time:");
+      LoRa.print(", \"Time\":\"");
       if (gps.time.hour() < 10)
         LoRa.print("0");
       LoRa.print(gps.time.hour());
@@ -120,14 +121,23 @@ void loop()
       if (gps.time.second() < 10)
         LoRa.print("0");
       LoRa.print(gps.time.second());
+      LoRa.print("\"");
     }
     if (gps.location.isValid())
     {
-      LoRa.print("|Loaction:");
-      LoRa.print(gps.location.lat(),6);
+      LoRa.print(", \"Location\":");
+      //{lat: -34, lng: 151}
+      LoRa.print("{\"lat\":");
+      LoRa.print(gps.location.lat(), 6);
       LoRa.print(",");
-      LoRa.print(gps.location.lng(),6);
+      LoRa.print("\"lng\":");
+      LoRa.print(gps.location.lng(), 6);
+      LoRa.print("}");
     }
+    LoRa.print(", \"Payload\":");
+    LoRa.print(sensIN);
+    //LoRa.print("\"");
+    LoRa.print("}");
     LoRa.endPacket();
     counter++;
     if (counter >= 10000)
@@ -140,7 +150,7 @@ void loop()
   {
     String LoRaData = "";
     // received a packet
-   // Serial.print("Received packet '");
+    // Serial.print("Received packet '");
     // read packet
     while (LoRa.available())
     {
@@ -148,9 +158,9 @@ void loop()
       Serial.print(LoRaData);
     }
     // print RSSI of packet
-    Serial.print("' recieved from id: ");
+    Serial.print("|RxID: ");
     Serial.print(myID);
-    Serial.print(" with RSSI ");
+    Serial.print(" RSSI:");
     int rssi_rx = LoRa.packetRssi();
     Serial.println(rssi_rx);
   }
